@@ -1,0 +1,11 @@
+{
+  "additionalFiles": "",
+  "builtInToolsFolders": "",
+  "compiler.optimization_flags": "",
+  "customBuildProperties": "",
+  "fqbn": "arduino:mbed_portenta:envie_m7:split=100_0",
+  "hardwareFolders": "C:\\Users\\ErikKinstler\\AppData\\Local\\T\\A\\packages",
+  "otherLibrariesFolders": "C:\\Users\\ErikKinstler\\AppData\\Local\\T\\U\\libraries",
+  "runtime.ide.version": "10607",
+  "sketchLocation": "C:\\Users\\ErikKinstler\\Downloads\\Test_Stand_HMI\\Test_Stand_HMI\\LLSketch"
+}
