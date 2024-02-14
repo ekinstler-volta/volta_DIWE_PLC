@@ -15,9 +15,10 @@ struct PLCSharedVarsOutput_t
 PLCSharedVarsOutput_t& PLCOut = (PLCSharedVarsOutput_t&)m_PLCSharedVarsOutputBuf;
 
 
-AlPlc AxelPLC(1955367127);
+AlPlc AxelPLC(-1248482673);
 
 #include <Ezo_i2c.h>
+
 
 Ezo_board EC = Ezo_board(100, "EC");
 

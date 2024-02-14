@@ -6570,6 +6570,8 @@ END_FUNCTION_BLOCK
 	TempC_Pump_max AT %MW201.6 : REAL;
 		{G:"Variables"}
 	Temp_C_eh_Act AT %MW201.8 : REAL;
+		{G:"Variables"}
+	ON_OFF AT %MW201.10 : USINT;
 	END_VAR
 ]]>
 			</src>
@@ -6577,8 +6579,8 @@ END_FUNCTION_BLOCK
 				<![CDATA[(* Automatically generated, do not edit! *)
 
 VAR_GLOBAL CONSTANT
-$$ParDB : ARRAY[ 0..199 ] OF USINT; { HIDDEN:ON } { INIT:"DIWE_PLC.PLK+0" }
-$$ParDBLength  : DWORD := 5; { HIDDEN:ON }
+$$ParDB : ARRAY[ 0..239 ] OF USINT; { HIDDEN:ON } { INIT:"DIWE_PLC.PLK+0" }
+$$ParDBLength  : DWORD := 6; { HIDDEN:ON }
 END_VAR
 
 PROGRAM InitParDB WITH Init;
@@ -6591,9 +6593,9 @@ PROGRAM InitParDB
 		dummyCrc32: UDINT;
 	END_VAR
 
-	dummyCrc32 := 1311789798;
+	dummyCrc32 := 2905710586;
 
-	warningsKiller := sysDBase_SetExtTable( TO_DWORD( ADR($$ParDB) ), $$ParDBLength, 200, 0, 0, 2, 201, TO_DWORD( ADR(%MW201.0) ), 10, 2, 1311789798 );
+	warningsKiller := sysDBase_SetExtTable( TO_DWORD( ADR($$ParDB) ), $$ParDBLength, 200, 0, 0, 2, 201, TO_DWORD( ADR(%MW201.0) ), 11, 2, 2905710586 );
 
 END_PROGRAM
 
@@ -6685,7 +6687,7 @@ END_VAR
 			</src>
 		</aux>
 		<workspace>
-			<root name="DIWE_PLC" nextID="5373">
+			<root name="DIWE_PLC" nextID="5553">
 				<Pou name="main" id="1"/>
 				<GlobalVars name="Global_vars" id="2"/>
 				<GlobalVars name="I_O_mappings_AO" id="6"/>
@@ -6845,6 +6847,30 @@ END_VAR
 								<dataBlock>%MW201.8</dataBlock>
 								<subindex>0</subindex>
 							</param>
+							<param>
+								<ipa>25500</ipa>
+								<address>25500</address>
+								<name>ON_OFF</name>
+								<typepar>2</typepar>
+								<typetarg>USINT</typetarg>
+								<value/>
+								<min/>
+								<max/>
+								<ipamin/>
+								<ipamax/>
+								<scale>1</scale>
+								<offs>0</offs>
+								<um/>
+								<description/>
+								<note/>
+								<form/>
+								<accesslevel>3</accesslevel>
+								<readonly>0</readonly>
+								<shortname/>
+								<size>0</size>
+								<dataBlock>%MW201.10</dataBlock>
+								<subindex>0</subindex>
+							</param>
 						</paramsRO>
 						<menus/>
 						<ioMappings_DI>
@@ -6982,6 +7008,7 @@ END_VAR
 					<CANopen id="0" protocol="" mode="0" nodeID="127" baudRate="250000" hbTime="0" syncCOBID="128" syncCycle="0" networkID="0" slaveNodeID="1" slaveDeviceType="301" slaveSyncCOBID="128" slaveSyncCycle="0" slaveManufacturerDeviceName="" slaveManufacturerHardwareVer="" slaveManufacturerSoftwareVer="" slaveGuardTime="200" slaveLifeTimeFactor="3" slaveConsumerHeartbeatTime="0" slaveProducerHeartbeatTime="0" slaveVendorID="0" slaveProductCode="0" slaveRevisionNumber="0" slaveSerialNumber="0" slaveCfgGranularity="8" slaveCfgCOBIDAutoAssignment="1" slaveCfgMaxTPDONum="8" slaveCfgMaxRPDONum="8"/>
 					<Ethernet protocol="" enableMaster="0" enableSlave="1" enableSlaveRtuGateway="0" rtuGatewayDefaultTimeout="100" slavePort="502"/>
 					<SketchContent>#include &lt;Ezo_i2c.h&gt;
+
 
 Ezo_board EC = Ezo_board(100, "EC");
 
