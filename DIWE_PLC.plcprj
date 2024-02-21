@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <plcProject caseSensitive="false" extendedIdNames="false" useCustomWorkspace="true" debugMode="false" extcheck="true" SFCControl="false" strictPointerCheck="true" verboseWarningMode="false" iecTypeConversionRules="false" PNContactsOnEachNetwork="false" LocalVarsFBAccess="false" strictEnumsCheck="true" copyWarningThreshold="200" version="2.11" useLD2="true" useXPLCFiles="false" useFBMethods="false" customSortOfProjectTree="false" autoDerefPointers="false">
 	<image>DIWE_PLC.imgx</image>
-	<commSettings>Modbus:247,1000,M#COM:7,19200,N,8,1,H</commSettings>
+	<commSettings>Modbus:247,1000,M#COM:11,19200,N,8,1,H</commSettings>
 	<sources>
 		<main>
 			<resources>
@@ -33,21 +33,25 @@
 					<var name="temp_voltage_elect_heater" type="DINT">
 						<address type="I" typeVar="D" index="1" subIndex="1"/>
 					</var>
+					<var name="temp_thermal_fuse" type="DINT"/>
+					<var name="temp_voltage_thermal_fuse" type="DINT">
+						<address type="I" typeVar="D" index="1" subIndex="0"/>
+					</var>
 				</group>
 				<group name="Global_vars" excludeFromBuild="FALSE" excludeFromBuildIfNotDef="" version="1.0.0">
 					<var name="Vin_temp" type="LREAL"/>
 					<var name="R2_temp" type="LREAL"/>
 					<var name="Vref" type="LREAL"/>
 					<var name="bits" type="LREAL"/>
-					<var name="Temp_K" type="LREAL"/>
+					<var name="Temp_K_TF" type="LREAL"/>
 					<var name="Vout_Thermistor" type="LREAL"/>
 					<var name="R_Thermistor" type="LREAL"/>
 					<var name="A" type="LREAL"/>
 					<var name="B" type="LREAL"/>
 					<var name="C" type="LREAL"/>
 					<var name="SHH_Inverse" type="LREAL"/>
-					<var name="Temp_C" type="REAL"/>
-					<var name="Temp_F" type="LREAL"/>
+					<var name="Temp_C_TF" type="REAL"/>
+					<var name="Temp_F_TF" type="LREAL"/>
 					<var name="SHH" type="LREAL"/>
 					<var name="Vtrim" type="LREAL"/>
 					<var name="Itrim" type="LREAL"/>
@@ -127,7 +131,7 @@
 			<functions/>
 			<functionBlocks/>
 			<programs>
-				<program name="main" version="1.0.0" creationDate="0" lastModifiedDate="1707346045" excludeFromBuild="FALSE" excludeFromBuildIfNotDef="">
+				<program name="main" version="1.0.0" creationDate="0" lastModifiedDate="1708351659" excludeFromBuild="FALSE" excludeFromBuildIfNotDef="">
 					<vars/>
 					<iecDeclaration active="FALSE"/>
 					<sourceCode type="ST">
@@ -185,24 +189,13 @@ ELSE
 	cnt := cnt + 1.0;
 END_IF;
 
-//SURFACE HEATER CONTROL
-IF Temp_C_p+1 <= TempC_Pump_max THEN
-	V_big_heater := 10.0;	
-ELSE
-	IF cnt <= cnt_setpoint THEN
-		V_big_heater := 10.0;
-	ELSE
-		V_big_heater := 0.0;
-	END_IF;
-END_IF;
-
 
 
 //ALL TEMPERATURE CONTROL
-//SURFACE INLET TEMPERATURE
+//THERMAL FUSE TEMPERATURE
 
 //correct Voltage reading
-Vout_Thermistor	:= (temp_voltage*(Vref / bits)); 		//Voltage at Thermistor
+Vout_Thermistor	:= (temp_voltage_thermal_fuse*(Vref / bits)); 		//Voltage at Thermistor
 
 //Thermistor Resistance reading
 R_Thermistor 	:= ((Vin_temp-(Vout_Thermistor)) * R2_temp)/(Vout_Thermistor);
@@ -220,9 +213,9 @@ SHH_inverse 	:= A + B + C;  							//Value as 1/T where T is in Kelvin
 SHH				:= POW((SHH_inverse),-1);
 
 //Temperature Conversions
-Temp_K			:= SHH; 								//Temperature in Kelvin
-Temp_C			:= (Temp_K) - 273.15; 					//Temperature in Celcius
-Temp_F			:= (((Temp_K) - 273.15) * 1.8) + 32;	//Temperature in Fahrenheit 
+Temp_K_TF			:= SHH; 								//Temperature in Kelvin
+Temp_C_TF			:= (Temp_K_TF) - 273.15; 					//Temperature in Celcius
+Temp_F_TF			:= (((Temp_K_TF) - 273.15) * 1.8) + 32;	//Temperature in Fahrenheit 
 
 
 
@@ -282,22 +275,40 @@ Temp_K_eh		:= SHH_eh; 								//Temperature in Kelvin
 Temp_C_eh		:= (Temp_K_eh) - 273.15; 				//Temperature in Celcius
 Temp_F_eh		:= (((Temp_K_eh) - 273.15) * 1.8) + 32;	//Temperature in Fahrenheit 
 
+//All Functions
 
+IF ON_OFF = 1 THEN
+//SURFACE HEATER CONTROL
+	IF Temp_C_p+1 <= TempC_Pump_max THEN
+		V_big_heater := 10.0;	
+	ELSE
+		IF cnt <= cnt_setpoint THEN
+			V_big_heater := 10.0;
+		ELSE
+			V_big_heater := 0.0;
+		END_IF;
+	END_IF;
 
+//Outlet Heater
+	Itrim := 10.0;
+	Vtrim := 56.0;
+ELSE
+	V_big_heater := 0.0;
 
+	IF V_big_heater = 0 AND Temp_C_eh_Act < 40 THEN
+	Itrim := 0.0;
+	Vtrim := 0.0;
+	END_IF;
 
-
-//OTHER FUNCTIONS
-//PUMP CONTROL
-//pump_v := Vmax*(rpm/rpm_max)
-pump_v := 5.0*(rpm/5000.0); 				//Equation for RPM based on Voltage
-
-
+	IF Itrim = 0 AND Temp_C_eh_Act < 35 THEN
+	rpm := 0.0;
+	END_IF;
+END_IF;
 //Actual Temp Variation
-//Temp_C_Act := ((Temp_C_Act*0.95) + (Temp_C*0.05));
-Temp_C_p_Act := ((Temp_C_p_Act*0.95) + (Temp_C_p*0.05));
-Temp_C_eh_Act := ((Temp_C_eh_Act*0.95) + (Temp_C_eh*0.05));
-
+//Temp_C_Act 	:= ((Temp_C_Act*0.95) + (Temp_C*0.05));
+Temp_C_p_Act 	:= ((Temp_C_p_Act*0.95) + (Temp_C_p*0.05));
+Temp_C_eh_Act	:= ((Temp_C_eh_Act*0.95) + (Temp_C_eh*0.05));
+Temp_C_TF_Act	:= ((Temp_C_TF_Act*0.95) + (Temp_C_TF*0.05));
 //PID Parameters
 //Surface Heater
 Temp_Proportion	:= ((TempC_Pump_max+0.9 - Temp_C_eh)/ TempC_Pump_max);
@@ -306,6 +317,9 @@ Itrim_H_PID := 2.0 + 8*Temp_Proportion;
 Temp_Proportion_E	:= ((TempC_Pump_max+0.9 - Temp_C_eh)/ TempC_Pump_max);
 Itrim_H_PID_E := 2.0 + 8*Temp_Proportion_E;
 
+//PUMP CONTROL
+//pump_v := Vmax*(rpm/rpm_max)
+	pump_v := 5.0*(rpm/5000.0); 				//Equation for RPM based on Voltage
 
 //PID Control for surface heater
 /*
@@ -330,9 +344,6 @@ END_IF;
 
 
 
-
-Itrim := 10.0;
-Vtrim := 56.0;
 //PID Control for electrolyzer heater
 /*
 IF Temp_C_eh+1 <= TempC_Pump_max THEN
@@ -6572,6 +6583,8 @@ END_FUNCTION_BLOCK
 	Temp_C_eh_Act AT %MW201.8 : REAL;
 		{G:"Variables"}
 	ON_OFF AT %MW201.10 : USINT;
+		{G:"Variables"}
+	Temp_C_TF_Act AT %MW201.12 : REAL;
 	END_VAR
 ]]>
 			</src>
@@ -6579,8 +6592,8 @@ END_FUNCTION_BLOCK
 				<![CDATA[(* Automatically generated, do not edit! *)
 
 VAR_GLOBAL CONSTANT
-$$ParDB : ARRAY[ 0..239 ] OF USINT; { HIDDEN:ON } { INIT:"DIWE_PLC.PLK+0" }
-$$ParDBLength  : DWORD := 6; { HIDDEN:ON }
+$$ParDB : ARRAY[ 0..279 ] OF USINT; { HIDDEN:ON } { INIT:"DIWE_PLC.PLK+0" }
+$$ParDBLength  : DWORD := 7; { HIDDEN:ON }
 END_VAR
 
 PROGRAM InitParDB WITH Init;
@@ -6593,9 +6606,9 @@ PROGRAM InitParDB
 		dummyCrc32: UDINT;
 	END_VAR
 
-	dummyCrc32 := 2905710586;
+	dummyCrc32 := 3776713648;
 
-	warningsKiller := sysDBase_SetExtTable( TO_DWORD( ADR($$ParDB) ), $$ParDBLength, 200, 0, 0, 2, 201, TO_DWORD( ADR(%MW201.0) ), 11, 2, 2905710586 );
+	warningsKiller := sysDBase_SetExtTable( TO_DWORD( ADR($$ParDB) ), $$ParDBLength, 200, 0, 0, 2, 201, TO_DWORD( ADR(%MW201.0) ), 14, 2, 3776713648 );
 
 END_PROGRAM
 
@@ -6687,7 +6700,7 @@ END_VAR
 			</src>
 		</aux>
 		<workspace>
-			<root name="DIWE_PLC" nextID="5553">
+			<root name="DIWE_PLC" nextID="6098">
 				<Pou name="main" id="1"/>
 				<GlobalVars name="Global_vars" id="2"/>
 				<GlobalVars name="I_O_mappings_AO" id="6"/>
@@ -6871,6 +6884,30 @@ END_VAR
 								<dataBlock>%MW201.10</dataBlock>
 								<subindex>0</subindex>
 							</param>
+							<param>
+								<ipa>25600</ipa>
+								<address>25600</address>
+								<name>Temp_C_TF_Act</name>
+								<typepar>2</typepar>
+								<typetarg>REAL</typetarg>
+								<value/>
+								<min/>
+								<max/>
+								<ipamin/>
+								<ipamax/>
+								<scale>1</scale>
+								<offs>0</offs>
+								<um/>
+								<description/>
+								<note/>
+								<form/>
+								<accesslevel>3</accesslevel>
+								<readonly>1</readonly>
+								<shortname/>
+								<size>0</size>
+								<dataBlock>%MW201.12</dataBlock>
+								<subindex>0</subindex>
+							</param>
 						</paramsRO>
 						<menus/>
 						<ioMappings_DI>
@@ -6927,7 +6964,7 @@ END_VAR
 						</ioMappings_DO>
 						<ioMappings_AI globalConfig="0">
 							<ioMapping id="0">
-								<label/>
+								<label>temp_voltage_thermal_fuse</label>
 							</ioMapping>
 							<ioMapping id="1">
 								<label>temp_voltage_elect_heater</label>
