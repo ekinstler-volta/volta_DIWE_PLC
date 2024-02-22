@@ -131,7 +131,7 @@
 			<functions/>
 			<functionBlocks/>
 			<programs>
-				<program name="main" version="1.0.0" creationDate="0" lastModifiedDate="1708351659" excludeFromBuild="FALSE" excludeFromBuildIfNotDef="">
+				<program name="main" version="1.0.0" creationDate="0" lastModifiedDate="1708617290" excludeFromBuild="FALSE" excludeFromBuildIfNotDef="">
 					<vars/>
 					<iecDeclaration active="FALSE"/>
 					<sourceCode type="ST">
@@ -172,7 +172,7 @@ I_set_v_elect_heat := ((2.085*(Itrim/20.0)) + 0.0953) + 0.082;	//Transfer functi
 // x = current temp
 // 16050 = 200 * (TempC_Pump_max + 0.25) where TempC_Pump_max = 80
 IF cnt > 99 THEN
-	cnt := 0;
+	cnt := 1;
 	//cnt_setpoint := (TempC_Pump_max + 0.5 - Temp_C_eh)*100;
 	IF (TempC_Pump_max - Temp_C_eh) > 0.25 OR (Temp_C_eh - TempC_Pump_max) > 0.25 THEN
 		cnt_setpoint := (-100 * Temp_C_eh) + (100 * (TempC_Pump_max + 0.50));	
@@ -296,12 +296,12 @@ ELSE
 	V_big_heater := 0.0;
 
 	IF V_big_heater = 0 AND Temp_C_eh_Act < 40 THEN
-	Itrim := 0.0;
-	Vtrim := 0.0;
+		Itrim := 0.0;
+		Vtrim := 0.0;
 	END_IF;
 
 	IF Itrim = 0 AND Temp_C_eh_Act < 35 THEN
-	rpm := 0.0;
+		rpm := 0.0;
 	END_IF;
 END_IF;
 //Actual Temp Variation
@@ -6700,7 +6700,7 @@ END_VAR
 			</src>
 		</aux>
 		<workspace>
-			<root name="DIWE_PLC" nextID="6098">
+			<root name="DIWE_PLC" nextID="6160">
 				<Pou name="main" id="1"/>
 				<GlobalVars name="Global_vars" id="2"/>
 				<GlobalVars name="I_O_mappings_AO" id="6"/>
@@ -7064,7 +7064,6 @@ void setup() {
   delay1 = 1000;
   delay2 = 600;
   delaySeq = 0;
-  delay(3000);
   preMills = millis();
 }
 
