@@ -15,7 +15,7 @@ struct PLCSharedVarsOutput_t
 PLCSharedVarsOutput_t& PLCOut = (PLCSharedVarsOutput_t&)m_PLCSharedVarsOutputBuf;
 
 
-AlPlc AxelPLC(-142047173);
+AlPlc AxelPLC(-1248482673);
 
 #include <Ezo_i2c.h>
 
@@ -37,6 +37,7 @@ void setup() {
   delay1 = 1000;
   delay2 = 600;
   delaySeq = 0;
+  delay(3000);
   preMills = millis();
 
 	AxelPLC.Run();
