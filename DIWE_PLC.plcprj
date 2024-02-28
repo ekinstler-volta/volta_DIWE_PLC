@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <plcProject caseSensitive="false" extendedIdNames="false" useCustomWorkspace="true" debugMode="false" extcheck="true" SFCControl="false" strictPointerCheck="true" verboseWarningMode="false" iecTypeConversionRules="false" PNContactsOnEachNetwork="false" LocalVarsFBAccess="false" strictEnumsCheck="true" copyWarningThreshold="200" version="2.11" useLD2="true" useXPLCFiles="false" useFBMethods="false" customSortOfProjectTree="false" autoDerefPointers="false">
 	<image>DIWE_PLC.imgx</image>
-	<commSettings>Modbus:247,1000,M#COM:11,19200,N,8,1,H</commSettings>
+	<commSettings>Modbus:247,1000,M#COM:4,19200,N,8,1,H</commSettings>
 	<sources>
 		<main>
 			<resources>
@@ -86,6 +86,7 @@
 					<var name="Itrim_H_PID_E" type="REAL"/>
 					<var name="cnt_setpoint" type="REAL"/>
 					<var name="cnt" type="REAL"/>
+					<var name="Temp_C_TF_Act" type="REAL"/>
 				</group>
 				<group name="I_O_mappings_AO" excludeFromBuild="FALSE" excludeFromBuildIfNotDef="" version="1.0.0">
 					<var name="V_set_v" type="REAL"/>
@@ -101,8 +102,16 @@
 					<var name="I_set_v_elect_heat" type="REAL">
 						<address type="Q" typeVar="D" index="1" subIndex="1"/>
 					</var>
-					<var name="V_big_heater" type="REAL">
-						<address type="Q" typeVar="D" index="1" subIndex="3"/>
+				</group>
+				<group name="I_O_mappings_DI" excludeFromBuild="FALSE" excludeFromBuildIfNotDef="" version="1.0.0">
+					<var name="TEST" type="BOOL"/>
+					<var name="Bool_Level" type="BOOL">
+						<address type="I" typeVar="X" index="0" subIndex="7"/>
+					</var>
+				</group>
+				<group name="I_O_mappings_DO" excludeFromBuild="FALSE" excludeFromBuildIfNotDef="" version="1.0.0">
+					<var name="V_big_heater" type="BOOL">
+						<address type="Q" typeVar="X" index="0" subIndex="0"/>
 					</var>
 				</group>
 			</globalVars>
@@ -131,7 +140,7 @@
 			<functions/>
 			<functionBlocks/>
 			<programs>
-				<program name="main" version="1.0.0" creationDate="0" lastModifiedDate="1708617290" excludeFromBuild="FALSE" excludeFromBuildIfNotDef="">
+				<program name="main" version="1.0.0" creationDate="0" lastModifiedDate="1709143540" excludeFromBuild="FALSE" excludeFromBuildIfNotDef="">
 					<vars/>
 					<iecDeclaration active="FALSE"/>
 					<sourceCode type="ST">
@@ -172,7 +181,7 @@ I_set_v_elect_heat := ((2.085*(Itrim/20.0)) + 0.0953) + 0.082;	//Transfer functi
 // x = current temp
 // 16050 = 200 * (TempC_Pump_max + 0.25) where TempC_Pump_max = 80
 IF cnt > 99 THEN
-	cnt := 1;
+	cnt := 0;
 	//cnt_setpoint := (TempC_Pump_max + 0.5 - Temp_C_eh)*100;
 	IF (TempC_Pump_max - Temp_C_eh) > 0.25 OR (Temp_C_eh - TempC_Pump_max) > 0.25 THEN
 		cnt_setpoint := (-100 * Temp_C_eh) + (100 * (TempC_Pump_max + 0.50));	
@@ -278,31 +287,41 @@ Temp_F_eh		:= (((Temp_K_eh) - 273.15) * 1.8) + 32;	//Temperature in Fahrenheit
 //All Functions
 
 IF ON_OFF = 1 THEN
+	IF Temp_C_TF_Act < 130 THEN
 //SURFACE HEATER CONTROL
-	IF Temp_C_p+1 <= TempC_Pump_max THEN
-		V_big_heater := 10.0;	
-	ELSE
-		IF cnt <= cnt_setpoint THEN
-			V_big_heater := 10.0;
+		IF Temp_C_p+1 <= TempC_Pump_max THEN
+			V_big_heater := TRUE;	
 		ELSE
-			V_big_heater := 0.0;
+			IF cnt <= cnt_setpoint THEN
+				V_big_heater := TRUE;
+			ELSE
+				V_big_heater := FALSE;
+			END_IF;
 		END_IF;
-	END_IF;
-
-//Outlet Heater
-	Itrim := 10.0;
-	Vtrim := 56.0;
-ELSE
-	V_big_heater := 0.0;
-
-	IF V_big_heater = 0 AND Temp_C_eh_Act < 40 THEN
+	
+		//Outlet Heater
+		IF rpm > 0 AND TempC_Pump_max > 0 THEN
+			Itrim := 10.0;
+			Vtrim := 56.0;
+		ELSE
+			Itrim := 0.0;
+			Vtrim := 0.0;
+		END_IF;
+		
+	ELSE 
 		Itrim := 0.0;
 		Vtrim := 0.0;
+		V_big_heater := FALSE;
 	END_IF;
-
+ELSE
+	V_big_heater := FALSE;
+	Itrim := 0.0;
+	Vtrim := 0.0;
+		
 	IF Itrim = 0 AND Temp_C_eh_Act < 35 THEN
-		rpm := 0.0;
+	rpm := 0.0;
 	END_IF;
+		
 END_IF;
 //Actual Temp Variation
 //Temp_C_Act 	:= ((Temp_C_Act*0.95) + (Temp_C*0.05));
@@ -373,6 +392,12 @@ END_IF;
 
 ec := in_EC;
 
+
+IF Bool_Level = TRUE THEN
+Level := 1.0;
+ELSE
+Level := 0.0;
+END_IF;
 ]]>
 					</sourceCode>
 				</program>
@@ -6584,7 +6609,7 @@ END_FUNCTION_BLOCK
 		{G:"Variables"}
 	ON_OFF AT %MW201.10 : USINT;
 		{G:"Variables"}
-	Temp_C_TF_Act AT %MW201.12 : REAL;
+	Level AT %MW201.11 : USINT;
 	END_VAR
 ]]>
 			</src>
@@ -6606,9 +6631,9 @@ PROGRAM InitParDB
 		dummyCrc32: UDINT;
 	END_VAR
 
-	dummyCrc32 := 3776713648;
+	dummyCrc32 := 102200671;
 
-	warningsKiller := sysDBase_SetExtTable( TO_DWORD( ADR($$ParDB) ), $$ParDBLength, 200, 0, 0, 2, 201, TO_DWORD( ADR(%MW201.0) ), 14, 2, 3776713648 );
+	warningsKiller := sysDBase_SetExtTable( TO_DWORD( ADR($$ParDB) ), $$ParDBLength, 200, 0, 0, 2, 201, TO_DWORD( ADR(%MW201.0) ), 12, 2, 102200671 );
 
 END_PROGRAM
 
@@ -6700,7 +6725,7 @@ END_VAR
 			</src>
 		</aux>
 		<workspace>
-			<root name="DIWE_PLC" nextID="6160">
+			<root name="DIWE_PLC" nextID="6594">
 				<Pou name="main" id="1"/>
 				<GlobalVars name="Global_vars" id="2"/>
 				<GlobalVars name="I_O_mappings_AO" id="6"/>
@@ -6887,9 +6912,9 @@ END_VAR
 							<param>
 								<ipa>25600</ipa>
 								<address>25600</address>
-								<name>Temp_C_TF_Act</name>
+								<name>Level</name>
 								<typepar>2</typepar>
-								<typetarg>REAL</typetarg>
+								<typetarg>USINT</typetarg>
 								<value/>
 								<min/>
 								<max/>
@@ -6905,7 +6930,7 @@ END_VAR
 								<readonly>1</readonly>
 								<shortname/>
 								<size>0</size>
-								<dataBlock>%MW201.12</dataBlock>
+								<dataBlock>%MW201.11</dataBlock>
 								<subindex>0</subindex>
 							</param>
 						</paramsRO>
@@ -6933,12 +6958,12 @@ END_VAR
 								<label/>
 							</ioMapping>
 							<ioMapping id="7">
-								<label/>
+								<label>Bool_Level</label>
 							</ioMapping>
 						</ioMappings_DI>
 						<ioMappings_DO globalConfig="0">
 							<ioMapping id="0">
-								<label/>
+								<label>V_big_heater</label>
 							</ioMapping>
 							<ioMapping id="1">
 								<label/>
@@ -6984,7 +7009,7 @@ END_VAR
 								<label>pump_v</label>
 							</ioMapping>
 							<ioMapping id="3" period="0">
-								<label>V_big_heater</label>
+								<label/>
 							</ioMapping>
 						</ioMappings_AO>
 						<ioMappings_DIO globalConfig="0">
