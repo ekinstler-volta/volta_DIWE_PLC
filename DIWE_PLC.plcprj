@@ -87,6 +87,15 @@
 					<var name="cnt_setpoint" type="REAL"/>
 					<var name="cnt" type="REAL"/>
 					<var name="Temp_C_TF_Act" type="REAL"/>
+					<var name="T_A" type="REAL"/>
+					<var name="T_B" type="REAL"/>
+					<var name="T_C" type="REAL"/>
+					<var name="T_A_eh" type="REAL"/>
+					<var name="T_B_eh" type="REAL"/>
+					<var name="T_C_eh" type="REAL"/>
+					<var name="T_A_p" type="REAL"/>
+					<var name="T_B_p" type="REAL"/>
+					<var name="T_C_p" type="REAL"/>
 				</group>
 				<group name="I_O_mappings_AO" excludeFromBuild="FALSE" excludeFromBuildIfNotDef="" version="1.0.0">
 					<var name="V_set_v" type="REAL"/>
@@ -127,20 +136,20 @@
 				<group name="I_O_mappings_AO">
 					<iecDeclaration active="FALSE"/>
 				</group>
-				<group name="Modbus_Vars">
-					<iecDeclaration active="FALSE"/>
-				</group>
 				<group name="I_O_mappings_DI">
 					<iecDeclaration active="FALSE"/>
 				</group>
 				<group name="I_O_mappings_DO">
 					<iecDeclaration active="FALSE"/>
 				</group>
+				<group name="Modbus_Vars">
+					<iecDeclaration active="FALSE"/>
+				</group>
 			</iecVarsDeclaration>
 			<functions/>
 			<functionBlocks/>
 			<programs>
-				<program name="main" version="1.0.0" creationDate="0" lastModifiedDate="1709143540" excludeFromBuild="FALSE" excludeFromBuildIfNotDef="">
+				<program name="main" version="1.0.0" creationDate="0" lastModifiedDate="1710168674" excludeFromBuild="FALSE" excludeFromBuildIfNotDef="">
 					<vars/>
 					<iecDeclaration active="FALSE"/>
 					<sourceCode type="ST">
@@ -150,6 +159,9 @@ Vin_temp		:= 5.0;  								//Input Voltage Value
 R2_temp			:= 5600; 								//Series Resistor Value
 Vref			:= 10.0; 								//Reference Voltage
 bits			:= POW(2,16); 							//Total # Bits
+A 				:= 0.001125308852122;					//SHH Coefficient 
+B 				:= 0.000234711863267;					//SHH Coefficient 
+C 				:= 0.000000085663516;					//SHH Coefficient 
 TempC_ST_max 	:= 80.0;								//Max Surface Temp
 TempC_eh_max	:= 40.0;								//Max Electrolyzer Temp
 //TempC_Pump_max 	:= 60.0;							//Max Pump Temperature (It is set up in "Status Variable" as 1000 rpm Default)
@@ -211,12 +223,12 @@ R_Thermistor 	:= ((Vin_temp-(Vout_Thermistor)) * R2_temp)/(Vout_Thermistor);
 
 //Steinhart-Hart Equation 1/T (in pieces))(found in Datasheet)
 
-A				:= 0.001125308852122;
-B				:= 0.000234711863267*ln(R_Thermistor);
-C				:= 0.000000085663516 * POW(ln(R_Thermistor),3);
+T_A				:= A;
+T_B				:= B*ln(R_Thermistor);
+T_C				:= C* POW(ln(R_Thermistor),3);
 
 //K equation (full  inverse)
-SHH_inverse 	:= A + B + C;  							//Value as 1/T where T is in Kelvin
+SHH_inverse 	:= T_A + T_B + T_C;  							//Value as 1/T where T is in Kelvin
 
 //K equation (final) SHH
 SHH				:= POW((SHH_inverse),-1);
@@ -240,12 +252,12 @@ R_Thermistor_p 	:= ((Vin_temp-(Vout_Thermistor_p)) * R2_temp)/(Vout_Thermistor_p
 
 //Steinhart-Hart Equation 1/T (in pieces))(found in Datasheet)
 
-A_p				:= 0.001125308852122;
-B_p				:= 0.000234711863267*ln(R_Thermistor_p);
-C_p				:= 0.000000085663516 * POW(ln(R_Thermistor_p),3);
+T_A_p				:= A;
+T_B_p				:= B*ln(R_Thermistor_p);
+T_C_p				:= C* POW(ln(R_Thermistor_p),3);
 
 //K equation (full  inverse)
-SHH_inverse_p 	:= A_p + B_p + C_p;  							//Value as 1/T where T is in Kelvin
+SHH_inverse_p 	:= T_A_p + T_B_p + T_C_p;  							//Value as 1/T where T is in Kelvin
 
 //K equation (final) SHH
 SHH_p			:= POW((SHH_inverse_p),-1); 
@@ -269,12 +281,12 @@ R_Thermistor_eh		:= ((Vin_temp-(Vout_Thermistor_eh)) * R2_temp)/(Vout_Thermistor
 
 //Steinhart-Hart Equation 1/T (in pieces))(found in Datasheet)
 
-A_eh				:= 0.001125308852122;
-B_eh				:= 0.000234711863267*ln(R_Thermistor_p);
-C_eh				:= 0.000000085663516 * POW(ln(R_Thermistor_p),3);
+T_A_eh				:= A;
+T_B_eh				:= B*ln(R_Thermistor_p);
+T_C_eh				:= C* POW(ln(R_Thermistor_p),3);
 
 //K equation (full  inverse)
-SHH_inverse_eh 		:= A_eh + B_eh + C_eh;  							//Value as 1/T where T is in Kelvin
+SHH_inverse_eh 		:= T_A_eh + T_B_eh + T_C_eh;  							//Value as 1/T where T is in Kelvin
 
 //K equation (final) SHH
 SHH_eh			:= POW((SHH_inverse_eh),-1); 
@@ -6725,7 +6737,7 @@ END_VAR
 			</src>
 		</aux>
 		<workspace>
-			<root name="DIWE_PLC" nextID="6594">
+			<root name="DIWE_PLC" nextID="7136">
 				<Pou name="main" id="1"/>
 				<GlobalVars name="Global_vars" id="2"/>
 				<GlobalVars name="I_O_mappings_AO" id="6"/>
