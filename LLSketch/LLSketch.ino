@@ -15,9 +15,9 @@ struct PLCSharedVarsOutput_t
 PLCSharedVarsOutput_t& PLCOut = (PLCSharedVarsOutput_t&)m_PLCSharedVarsOutputBuf;
 
 
-AlPlc AxelPLC(-142047173);
+AlPlc AxelPLC(-1049911401);
 
-#include <Ezo_i2c.h>
+/*#include <Ezo_i2c.h>
 
 
 Ezo_board EC = Ezo_board(100, "EC");
@@ -31,21 +31,21 @@ int delaySeq;
 void step1();
 void step2();
 void i2c_nodelay_sequencer(unsigned long* preMills, unsigned long delay1, unsigned long delay2, int* delaySeq);
-
+*/
 void setup() {
-  Wire.begin();                 // enable I2C port.
+  /*Wire.begin();                 // enable I2C port.
   delay1 = 1000;
   delay2 = 600;
   delaySeq = 0;
-  preMills = millis();
+  preMills = millis();*/
 
 	AxelPLC.Run();
 }
 
 void loop() {
-    i2c_nodelay_sequencer(&preMills, delay1, delay2, &delaySeq);
+    //i2c_nodelay_sequencer(&preMills, delay1, delay2, &delaySeq);
 }
-
+/*
 void step1() {
     EC.send_cmd("r");
 }
@@ -76,4 +76,4 @@ void i2c_nodelay_sequencer(unsigned long* preMills, unsigned long delay1, unsign
 	    }
 	}
 	return;
-}
+}*/

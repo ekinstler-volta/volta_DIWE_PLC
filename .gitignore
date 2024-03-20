@@ -5,3 +5,4 @@ LLSketch_build/*
 
 # Ignore workspace local settings file changes
 *.wkpx
+*.ZIP

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <plcProject caseSensitive="false" extendedIdNames="false" useCustomWorkspace="true" debugMode="false" extcheck="true" SFCControl="false" strictPointerCheck="true" verboseWarningMode="false" iecTypeConversionRules="false" PNContactsOnEachNetwork="false" LocalVarsFBAccess="false" strictEnumsCheck="true" copyWarningThreshold="200" version="2.11" useLD2="true" useXPLCFiles="false" useFBMethods="false" customSortOfProjectTree="false" autoDerefPointers="false">
 	<image>DIWE_PLC.imgx</image>
-	<commSettings>Modbus:247,1000,M#COM:4,19200,N,8,1,H</commSettings>
+	<commSettings>Modbus:247,1000,M#COM:3,38400,N,8,1,H</commSettings>
 	<sources>
 		<main>
 			<resources>
@@ -149,7 +149,7 @@
 			<functions/>
 			<functionBlocks/>
 			<programs>
-				<program name="main" version="1.0.0" creationDate="0" lastModifiedDate="1710168674" excludeFromBuild="FALSE" excludeFromBuildIfNotDef="">
+				<program name="main" version="1.0.0" creationDate="0" lastModifiedDate="1710869911" excludeFromBuild="FALSE" excludeFromBuildIfNotDef="">
 					<vars/>
 					<iecDeclaration active="FALSE"/>
 					<sourceCode type="ST">
@@ -282,8 +282,8 @@ R_Thermistor_eh		:= ((Vin_temp-(Vout_Thermistor_eh)) * R2_temp)/(Vout_Thermistor
 //Steinhart-Hart Equation 1/T (in pieces))(found in Datasheet)
 
 T_A_eh				:= A;
-T_B_eh				:= B*ln(R_Thermistor_p);
-T_C_eh				:= C* POW(ln(R_Thermistor_p),3);
+T_B_eh				:= B*ln(R_Thermistor_eh);
+T_C_eh				:= C* POW(ln(R_Thermistor_eh),3);
 
 //K equation (full  inverse)
 SHH_inverse_eh 		:= T_A_eh + T_B_eh + T_C_eh;  							//Value as 1/T where T is in Kelvin
@@ -6737,7 +6737,7 @@ END_VAR
 			</src>
 		</aux>
 		<workspace>
-			<root name="DIWE_PLC" nextID="7136">
+			<root name="DIWE_PLC" nextID="7284">
 				<Pou name="main" id="1"/>
 				<GlobalVars name="Global_vars" id="2"/>
 				<GlobalVars name="I_O_mappings_AO" id="6"/>
@@ -7081,7 +7081,7 @@ END_VAR
 					<RS485 protocol="" mode="2" baudRate="19200" serialMode="none,8,2" slaveAddress="1" COMnumber="2" rsmode="1" netId="0" maxSlaves="32" serCfg="1"/>
 					<CANopen id="0" protocol="" mode="0" nodeID="127" baudRate="250000" hbTime="0" syncCOBID="128" syncCycle="0" networkID="0" slaveNodeID="1" slaveDeviceType="301" slaveSyncCOBID="128" slaveSyncCycle="0" slaveManufacturerDeviceName="" slaveManufacturerHardwareVer="" slaveManufacturerSoftwareVer="" slaveGuardTime="200" slaveLifeTimeFactor="3" slaveConsumerHeartbeatTime="0" slaveProducerHeartbeatTime="0" slaveVendorID="0" slaveProductCode="0" slaveRevisionNumber="0" slaveSerialNumber="0" slaveCfgGranularity="8" slaveCfgCOBIDAutoAssignment="1" slaveCfgMaxTPDONum="8" slaveCfgMaxRPDONum="8"/>
 					<Ethernet protocol="" enableMaster="0" enableSlave="1" enableSlaveRtuGateway="0" rtuGatewayDefaultTimeout="100" slavePort="502"/>
-					<SketchContent>#include &lt;Ezo_i2c.h&gt;
+					<SketchContent>/*#include &lt;Ezo_i2c.h&gt;
 
 
 Ezo_board EC = Ezo_board(100, "EC");
@@ -7095,19 +7095,19 @@ int delaySeq;
 void step1();
 void step2();
 void i2c_nodelay_sequencer(unsigned long* preMills, unsigned long delay1, unsigned long delay2, int* delaySeq);
-
+*/
 void setup() {
-  Wire.begin();                 // enable I2C port.
+  /*Wire.begin();                 // enable I2C port.
   delay1 = 1000;
   delay2 = 600;
   delaySeq = 0;
-  preMills = millis();
+  preMills = millis();*/
 }
 
 void loop() {
-    i2c_nodelay_sequencer(&amp;preMills, delay1, delay2, &amp;delaySeq);
+    //i2c_nodelay_sequencer(&amp;preMills, delay1, delay2, &amp;delaySeq);
 }
-
+/*
 void step1() {
     EC.send_cmd("r");
 }
@@ -7138,7 +7138,7 @@ void i2c_nodelay_sequencer(unsigned long* preMills, unsigned long delay1, unsign
 	    }
 	}
 	return;
-}</SketchContent>
+}*/</SketchContent>
 					<SketchLibraries/>
 				</ArduinoPMC_1p0>
 			</data>
