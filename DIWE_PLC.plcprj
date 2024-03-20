@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <plcProject caseSensitive="false" extendedIdNames="false" useCustomWorkspace="true" debugMode="false" extcheck="true" SFCControl="false" strictPointerCheck="true" verboseWarningMode="false" iecTypeConversionRules="false" PNContactsOnEachNetwork="false" LocalVarsFBAccess="false" strictEnumsCheck="true" copyWarningThreshold="200" version="2.11" useLD2="true" useXPLCFiles="false" useFBMethods="false" customSortOfProjectTree="false" autoDerefPointers="false">
 	<image>DIWE_PLC.imgx</image>
-	<commSettings>Modbus:247,1000,M#COM:3,38400,N,8,1,H</commSettings>
+	<commSettings>Modbus:247,1000,M#COM:4,38400,N,8,1,H</commSettings>
 	<sources>
 		<main>
 			<resources>
@@ -149,7 +149,7 @@
 			<functions/>
 			<functionBlocks/>
 			<programs>
-				<program name="main" version="1.0.0" creationDate="0" lastModifiedDate="1710869911" excludeFromBuild="FALSE" excludeFromBuildIfNotDef="">
+				<program name="main" version="1.0.0" creationDate="0" lastModifiedDate="1710949466" excludeFromBuild="FALSE" excludeFromBuildIfNotDef="">
 					<vars/>
 					<iecDeclaration active="FALSE"/>
 					<sourceCode type="ST">
@@ -159,9 +159,15 @@ Vin_temp		:= 5.0;  								//Input Voltage Value
 R2_temp			:= 5600; 								//Series Resistor Value
 Vref			:= 10.0; 								//Reference Voltage
 bits			:= POW(2,16); 							//Total # Bits
-A 				:= 0.001125308852122;					//SHH Coefficient 
-B 				:= 0.000234711863267;					//SHH Coefficient 
-C 				:= 0.000000085663516;					//SHH Coefficient 
+
+A 				:= 0.001125308852122;					//SHH Coefficient TF & Outlet
+B 				:= 0.000234711863267;					//SHH Coefficient TF & Outlet
+C 				:= 0.000000085663516;					//SHH Coefficient TF & Outlet
+
+A_eh			:= -0.0007788164508;					//SHH Coefficient EH
+B_eh			:= 0.0005246326901;						//SHH Coefficient EH
+C_eh			:= -0.0000009222122671;					//SHH Coefficient EH
+
 TempC_ST_max 	:= 80.0;								//Max Surface Temp
 TempC_eh_max	:= 40.0;								//Max Electrolyzer Temp
 //TempC_Pump_max 	:= 60.0;							//Max Pump Temperature (It is set up in "Status Variable" as 1000 rpm Default)
@@ -281,9 +287,9 @@ R_Thermistor_eh		:= ((Vin_temp-(Vout_Thermistor_eh)) * R2_temp)/(Vout_Thermistor
 
 //Steinhart-Hart Equation 1/T (in pieces))(found in Datasheet)
 
-T_A_eh				:= A;
-T_B_eh				:= B*ln(R_Thermistor_eh);
-T_C_eh				:= C* POW(ln(R_Thermistor_eh),3);
+T_A_eh				:= A_eh;
+T_B_eh				:= B_eh*ln(R_Thermistor_eh);
+T_C_eh				:= C_eh* POW(ln(R_Thermistor_eh),3);
 
 //K equation (full  inverse)
 SHH_inverse_eh 		:= T_A_eh + T_B_eh + T_C_eh;  							//Value as 1/T where T is in Kelvin
@@ -301,7 +307,7 @@ Temp_F_eh		:= (((Temp_K_eh) - 273.15) * 1.8) + 32;	//Temperature in Fahrenheit
 IF ON_OFF = 1 THEN
 	IF Temp_C_TF_Act < 130 THEN
 //SURFACE HEATER CONTROL
-		IF Temp_C_p+1 <= TempC_Pump_max THEN
+		IF Temp_C_eh+1 <= TempC_Pump_max THEN
 			V_big_heater := TRUE;	
 		ELSE
 			IF cnt <= cnt_setpoint THEN
@@ -406,9 +412,9 @@ ec := in_EC;
 
 
 IF Bool_Level = TRUE THEN
-Level := 1.0;
-ELSE
 Level := 0.0;
+ELSE
+Level := 1.0;
 END_IF;
 ]]>
 					</sourceCode>
@@ -6737,7 +6743,7 @@ END_VAR
 			</src>
 		</aux>
 		<workspace>
-			<root name="DIWE_PLC" nextID="7284">
+			<root name="DIWE_PLC" nextID="7432">
 				<Pou name="main" id="1"/>
 				<GlobalVars name="Global_vars" id="2"/>
 				<GlobalVars name="I_O_mappings_AO" id="6"/>
